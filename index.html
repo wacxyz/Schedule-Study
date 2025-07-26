@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Routine Tracker with Colored Subjects & Daily Notifications</title>
+<style>
+  body {
+    background: #f0f4f8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 20px;
+    color: #222;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    color: #34495e;
+    margin-bottom: 4px;
+  }
+  #dateToday {
+    text-align: center;
+    font-weight: 600;
+    color: #7f8c8d;
+    margin-bottom: 25px;
+  }
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    background: #ecf0f1;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 6px;
+    font-weight: 600;
+    color: #34495e;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .tab-btn.active {
+    background: #2980b9;
+    color: white;
+  }
+  .routine-container {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(9, 55px);
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+  .day-box {
+    background: #bdc3c7;
+    border-radius: 8px;
+    cursor: default;
+    user-select: none;
+    font-size: 1.3rem;
+    color: #222;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 75px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+  }
+  .day-box.completed {
+    background: #27ae60;
+    color: white;
+    box-shadow: 0 3px 8px rgba(39, 174, 96, 0.7);
+  }
+  .day-box.today {
+    border: 3px solid #e67e22;
+  }
+  .day-box.clickable {
+    cursor: pointer;
+  }
+  .day-box.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .day-box.glowing {
+    box-shadow: 0 0 12px 3px #f1c40f;
+    animation: glowPulse 2s infinite alternate;
+  }
+  @keyframes glowPulse {
+    from {
+      box-shadow: 0 0 8px 2px #f1c40f;
+    }
+    to {
+      box-shadow: 0 0 15px 5px #f39c12;
+    }
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  table th, table td {
+    border: 1px solid #bdc3c7;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  table th {
+    background-color: #2980b9;
+    color: white;
+    font-weight: 700;
+  }
+  table tr:nth-child(even) {
+    background-color: #f7f9fb;
+  }
+
+  /* Subject badges with distinct colors */
+  .subject-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    margin: 2px 4px 2px 0;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  .NepaliEnglish { background-color: #2980b9; }
+  .EnglishNepali { background-color: #3498db; }
+  .Account { background-color: #e67e22; }
+  .Science { background-color: #27ae60; }
+  .Economics { background-color: #9b59b6; }
+  .Social { background-color: #16a085; }
+  .Math { background-color: #c0392b; }
+
+  footer {
+    text-align: center;
+    color: #95a5a6;
+    font-size: 0.85rem;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Study Routine Tracker (6 PM - 12 AM)</h1>
+<div id="dateToday"></div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-target="routine18">18-Day Routine</button>
+  <button class="tab-btn" data-target="routine54">54-Day Routine</button>
+</div>
+
+<div id="routine18" class="routine-container">
+  <h2>18-Day Study Routine</h2>
+  <div class="grid" id="grid18"></div>
+  <table id="table18">
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Subject &amp; Time Duration</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div id="routine54" class="routine-container" style="display:none;">
+  <h2>54-Day Study Routine</h2>
+  <div class="grid" id="grid54"></div>
+  <table id="table54">
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Subject &amp; Time Duration</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<footer>&copy; 2025 Study Tracker</footer>
+
+<script>
+  // Subject full names and CSS class for badge colors
+  const subjectDurations = {
+    'Nepali + English': { duration: 100, class: 'NepaliEnglish' },
+    'English + Nepali': { duration: 100, class: 'EnglishNepali' },
+    Account: { duration: 80, class: 'Account' },
+    Science: { duration: 80, class: 'Science' },
+    Economics: { duration: 80, class: 'Economics' },
+    Social: { duration: 100, class: 'Social' },
+    Math: { duration: 100, class: 'Math' },
+  };
+
+  // Format time as HH:MM (24h)
+  function formatTime(date) {
+    return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  }
+
+  // Generate schedule starting at 18:00 (6 PM)
+  function generateSchedule(startHour, startMinute, subjects) {
+    let schedule = [];
+    let current = new Date();
+    current.setHours(startHour, startMinute, 0, 0);
+
+    for (let subj of subjects) {
+      let dur = subjectDurations[subj]?.duration || 60;
+      let end = new Date(current.getTime() + dur * 60000);
+      schedule.push({
+        subject: subj,
+        start: formatTime(current),
+        end: formatTime(end),
+        startDate: new Date(current.getTime()),
+        endDate: new Date(end.getTime()),
+        cssClass: subjectDurations[subj]?.class || ''
+      });
+      current = end;
+    }
+    return schedule;
+  }
+
+  // Routine pattern with Nepali + English first, Math last
+  const routinePattern = [
+    ['Nepali + English', 'Account', 'Science', 'Math'],
+    ['Nepali + English', 'Social', 'Economics', 'Math'],
+    ['English + Nepali', 'Account', 'Science', 'Math'],
+  ];
+
+  // Build full routines
+  const routine18 = Array.from({length: 18}, (_, i) => routinePattern[i % 3]);
+  const routine54 = Array.from({length: 54}, (_, i) => routinePattern[i % 3]);
+
+  // Start dates = today
+  const start18Date = new Date();
+  const start54Date = new Date();
+
+  // Elements
+  const dateTodayEl = document.getElementById('dateToday');
+  const grid18 = document.getElementById('grid18');
+  const grid54 = document.getElementById('grid54');
+  const routine18Container = document.getElementById('routine18');
+  const routine54Container = document.getElementById('routine54');
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tableBody18 = document.querySelector('#table18 tbody');
+  const tableBody54 = document.querySelector('#table54 tbody');
+
+  // Get current day number relative to start date
+  function getCurrentDayNumber(startDate, totalDays) {
+    const now = new Date();
+    const diff = now - startDate;
+    const daysPassed = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+    if (daysPassed < 1) return 1;
+    if (daysPassed > totalDays) return totalDays;
+    return daysPassed;
+  }
+
+  // Render day boxes grid
+  function renderRoutineGrid(container, routine, storageKey, startDate) {
+    container.innerHTML = '';
+    const totalDays = routine.length;
+    const todayNum = getCurrentDayNumber(startDate, totalDays);
+    let completed = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    for (let i = 0; i < totalDays; i++) {
+      const dayNum = i + 1;
+      const dayBox = document.createElement('div');
+      dayBox.classList.add('day-box');
+      if (completed.includes(dayNum)) dayBox.classList.add('completed');
+      if (dayNum === todayNum) dayBox.classList.add('today');
+      dayBox.textContent = dayNum;
+
+      const now = new Date();
+      let allowClick = false;
+      const isToday = dayNum === todayNum;
+
+      if (dayNum < todayNum) {
+        allowClick = true;
+      } else if (isToday) {
+        const schedule = generateSchedule(18, 0, routine[i]);
+        const lastEnd = schedule[schedule.length - 1].endDate;
+
+        if (now >= lastEnd) {
+          allowClick = true;
+        } else {
+          dayBox.classList.add('glowing');
+        }
+      }
+      // Future days disabled
+
+      if (allowClick) {
+        dayBox.classList.add('clickable');
+        dayBox.addEventListener('click', () => {
+          let comp = JSON.parse(localStorage.getItem(storageKey)) || [];
+          if (comp.includes(dayNum)) {
+            comp = comp.filter(d => d !== dayNum);
+            dayBox.classList.remove('completed');
+          } else {
+            comp.push(dayNum);
+            dayBox.classList.add('completed');
+          }
+          localStorage.setItem(storageKey, JSON.stringify(comp));
+        });
+      } else {
+        dayBox.classList.add('disabled');
+      }
+
+      container.appendChild(dayBox);
+    }
+  }
+
+  // Render subject & time tables with colored badges
+  function renderRoutineTable(tbody, routine) {
+    tbody.innerHTML = '';
+    routine.forEach((subjects, idx) => {
+      const tr = document.createElement('tr');
+      const dayNum = idx + 1;
+      const schedule = generateSchedule(18, 0, subjects);
+
+      const subjWithTime = schedule.map(s => {
+        return `<span class="subject-badge ${s.cssClass}">${s.subject} (${s.start} - ${s.end})</span>`;
+      }).join('');
+
+      tr.innerHTML = `<td>${dayNum}</td><td style="text-align:left;">${subjWithTime}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Update today's date display
+  function updateDate() {
+    const now = new Date();
+    dateTodayEl.textContent = `Today is: ${now.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}`;
+  }
+
+  // Tab switch handler
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (btn.dataset.target === 'routine18') {
+        routine18Container.style.display = 'block';
+        routine54Container.style.display = 'none';
+      } else {
+        routine18Container.style.display = 'none';
+        routine54Container.style.display = 'block';
+      }
+    });
+  });
+
+  // Notifications: request permission and schedule daily notification at 6 PM
+  function notifyMe(subjects) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+      new Notification("Study Reminder", {
+        body: `Today's subjects:\n${subjects.join(", ")}`,
+        icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+      });
+    }
+  }
+
+  function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }
+
+  function scheduleDailyNotification() {
+    const now = new Date();
+    const next6pm = new Date();
+    next6pm.setHours(18, 0, 0, 0);
+    if (now > next6pm) next6pm.setDate(next6pm.getDate() + 1);
+    const msTo6pm = next6pm - now;
+
+    setTimeout(() => {
+      sendTodayNotification();
+      setInterval(sendTodayNotification, 24 * 60 * 60 * 1000);
+    }, msTo6pm);
+  }
+
+  function sendTodayNotification() {
+    let todayIndex = getCurrentDayNumber(start54Date, routine54.length) - 1;
+    if (todayIndex < 0) todayIndex = 0;
+    if (todayIndex >= routine54.length) todayIndex = routine54.length - 1;
+    const subjectsToday = routine54[todayIndex];
+    notifyMe(subjectsToday);
+  }
+
+  // Initial render & intervals
+  updateDate();
+  renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
+  renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
+  renderRoutineTable(tableBody18, routine18);
+  renderRoutineTable(tableBody54, routine54);
+
+  setInterval(() => {
+    updateDate();
+    renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
+    renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
+  }, 60000);
+
+  requestNotificationPermission();
+  scheduleDailyNotification();
+
+</script>
+
+</body>
+</html>
