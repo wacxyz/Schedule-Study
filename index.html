@@ -360,44 +360,6 @@
     });
   });
 
-  // Notifications: request permission and schedule daily notification at 6 PM
-  function notifyMe(subjects) {
-    if (!("Notification" in window)) return;
-    if (Notification.permission === "granted") {
-      new Notification("Study Reminder", {
-        body: `Today's subjects:\n${subjects.join(", ")}`,
-        icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
-      });
-    }
-  }
-
-  function requestNotificationPermission() {
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
-  }
-
-  function scheduleDailyNotification() {
-    const now = new Date();
-    const next6pm = new Date();
-    next6pm.setHours(18, 0, 0, 0);
-    if (now > next6pm) next6pm.setDate(next6pm.getDate() + 1);
-    const msTo6pm = next6pm - now;
-
-    setTimeout(() => {
-      sendTodayNotification();
-      setInterval(sendTodayNotification, 24 * 60 * 60 * 1000);
-    }, msTo6pm);
-  }
-
-  function sendTodayNotification() {
-    let todayIndex = getCurrentDayNumber(start54Date, routine54.length) - 1;
-    if (todayIndex < 0) todayIndex = 0;
-    if (todayIndex >= routine54.length) todayIndex = routine54.length - 1;
-    const subjectsToday = routine54[todayIndex];
-    notifyMe(subjectsToday);
-  }
-
   // Initial render & intervals
   updateDate();
   renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
@@ -411,9 +373,61 @@
     renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
   }, 60000);
 
-  requestNotificationPermission();
-  scheduleDailyNotification();
+  // === IMPROVED NOTIFICATION SYSTEM SCRIPT ===
+  // Reminder times (hours in 24h format)
+  const reminderHours = [5, 7, 9, 11, 13, 15, 17]; 
+  // Minute can be 0, but for 5:50 PM add special case
+  const reminderMinute = 0;
 
+  // Unique key to track if reminders stopped today
+  function getTodayStopKey() {
+    return 'stopReminders_' + new Date().toISOString().split('T')[0];
+  }
+
+  // Request notification permission on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  });
+
+  // Show notification reminder
+  function showReminder(stopKey) {
+    if (Notification.permission !== 'granted') return;
+
+    const notification = new Notification("📚 Study Reminder", {
+      body: "Get ready to study! Click to stop reminders for today.",
+      icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
+      badge: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png"
+    });
+
+    notification.onclick = () => {
+      localStorage.setItem(stopKey, true); // Stop reminders for today
+      notification.close();
+    };
+  }
+
+  // Schedule reminder checks every minute
+  function setupReminderSchedule() {
+    setInterval(() => {
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const stopKey = getTodayStopKey();
+
+      if (localStorage.getItem(stopKey)) return; // reminders stopped today
+
+      // Check if current time matches any reminder hour and minute
+      if (
+        reminderHours.includes(hour) && 
+        (minute === reminderMinute || (hour === 17 && minute === 50))
+      ) {
+        showReminder(stopKey);
+      }
+    }, 60000); // every 1 minute
+  }
+
+  setupReminderSchedule();
 </script>
 
 </body>
