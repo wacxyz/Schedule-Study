@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Study Routine Tracker with Colored Subjects & Daily Notifications</title>
 <style>
-  /* (Your existing CSS unchanged, omitted here for brevity but please keep it same as above) */
   body {
     background: #f0f4f8;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,7 +12,141 @@
     color: #222;
     min-height: 100vh;
   }
-  /* rest of your CSS here ... */
+  h1 {
+    text-align: center;
+    color: #34495e;
+    margin-bottom: 4px;
+  }
+  #dateToday {
+    text-align: center;
+    font-weight: 600;
+    color: #7f8c8d;
+    margin-bottom: 25px;
+  }
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    background: #ecf0f1;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 6px;
+    font-weight: 600;
+    color: #34495e;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .tab-btn.active {
+    background: #2980b9;
+    color: white;
+  }
+  .routine-container {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(9, 55px);
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+  .day-box {
+    background: #bdc3c7;
+    border-radius: 8px;
+    cursor: default;
+    user-select: none;
+    font-size: 1.3rem;
+    color: #222;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 75px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+  }
+  .day-box.completed {
+    background: #27ae60;
+    color: white;
+    box-shadow: 0 3px 8px rgba(39, 174, 96, 0.7);
+  }
+  .day-box.today {
+    border: 3px solid #e67e22;
+  }
+  .day-box.clickable {
+    cursor: pointer;
+  }
+  .day-box.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .day-box.glowing {
+    box-shadow: 0 0 12px 3px #f1c40f;
+    animation: glowPulse 2s infinite alternate;
+  }
+  @keyframes glowPulse {
+    from {
+      box-shadow: 0 0 8px 2px #f1c40f;
+    }
+    to {
+      box-shadow: 0 0 15px 5px #f39c12;
+    }
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  table th, table td {
+    border: 1px solid #bdc3c7;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  table th {
+    background-color: #2980b9;
+    color: white;
+    font-weight: 700;
+  }
+  table tr:nth-child(even) {
+    background-color: #f7f9fb;
+  }
+
+  /* Subject badges with distinct colors */
+  .subject-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    margin: 2px 4px 2px 0;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  .NepaliEnglish { background-color: #2980b9; }
+  .EnglishNepali { background-color: #3498db; }
+  .Account { background-color: #e67e22; }
+  .Science { background-color: #27ae60; }
+  .Economics { background-color: #9b59b6; }
+  .Social { background-color: #16a085; }
+  .Math { background-color: #c0392b; }
+
+  footer {
+    text-align: center;
+    color: #95a5a6;
+    font-size: 0.85rem;
+    margin-top: 30px;
+  }
 </style>
 </head>
 <body>
@@ -57,7 +190,7 @@
 <footer>&copy; 2025 Study Tracker</footer>
 
 <script>
-  // Your existing study routine code here (same as before) ...
+  // === STUDY ROUTINE CODE (unchanged) ===
   const subjectDurations = {
     'Nepali + English': { duration: 100, class: 'NepaliEnglish' },
     'English + Nepali': { duration: 100, class: 'EnglishNepali' },
@@ -240,16 +373,16 @@
   const STOP_KEY = getTodayKey('stopReminders');
   const RANDOM_COUNT_KEY = getTodayKey('randomReminderCount');
 
+  // Request permission on first load
   document.addEventListener("DOMContentLoaded", () => {
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       Notification.requestPermission();
     }
   });
 
+  // Show notification with click-to-stop
   function showNotification(message) {
     if (Notification.permission !== 'granted') return;
-
-    const stopKey = STOP_KEY;
 
     const notification = new Notification("📚 Study Reminder", {
       body: message + " Click to stop reminders for today.",
@@ -258,11 +391,12 @@
     });
 
     notification.onclick = () => {
-      localStorage.setItem(stopKey, true);
+      localStorage.setItem(STOP_KEY, true);
       notification.close();
     };
   }
 
+  // Check fixed scheduled reminders every minute
   function checkFixedReminders() {
     const now = new Date();
     const hour = now.getHours();
@@ -278,13 +412,14 @@
     }
   }
 
+  // Schedule random reminders up to max times per day
   function scheduleRandomReminder() {
     if (localStorage.getItem(STOP_KEY)) return;
 
     let count = parseInt(localStorage.getItem(RANDOM_COUNT_KEY)) || 0;
     if (count >= MAX_RANDOM_REMINDERS) return;
 
-    // Random delay 5 min to 3 hours
+    // Random delay between 5 min (300000 ms) and 3 hours (10800000 ms)
     const randomDelay = Math.floor(Math.random() * (3 * 60 - 5) + 5) * 60000;
 
     setTimeout(() => {
@@ -301,6 +436,7 @@
     }, randomDelay);
   }
 
+  // Initialize random reminders and reset daily counts at midnight
   function initRandomReminders() {
     const lastDate = localStorage.getItem('randomReminderDate');
     const today = new Date().toISOString().split('T')[0];
@@ -312,10 +448,12 @@
     scheduleRandomReminder();
   }
 
+  // Run fixed reminders check every minute
   setInterval(() => {
     checkFixedReminders();
   }, 60000);
 
+  // Start random reminders logic on page load
   initRandomReminders();
 
 </script>
