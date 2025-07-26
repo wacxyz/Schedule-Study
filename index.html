@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Study Routine Tracker with Colored Subjects & Daily Notifications</title>
+<title>Study Routine Tracker with Colored Subjects</title>
 <style>
   body {
     background: #f0f4f8;
@@ -190,7 +190,7 @@
 <footer>&copy; 2025 Study Tracker</footer>
 
 <script>
-  // === STUDY ROUTINE CODE (unchanged) ===
+  // === STUDY ROUTINE CODE ONLY ===
   const subjectDurations = {
     'Nepali + English': { duration: 100, class: 'NepaliEnglish' },
     'English + Nepali': { duration: 100, class: 'EnglishNepali' },
@@ -358,103 +358,6 @@
     renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
     renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
   }, 60000);
-
-  // === IMPROVED NOTIFICATION SYSTEM WITH RANDOM & FIXED REMINDERS ===
-
-  const reminderHours = [5, 7, 9, 11, 13, 15, 17];
-  const reminderMinute = 0;
-
-  const MAX_RANDOM_REMINDERS = 3;
-
-  function getTodayKey(suffix) {
-    return suffix + '_' + new Date().toISOString().split('T')[0];
-  }
-
-  const STOP_KEY = getTodayKey('stopReminders');
-  const RANDOM_COUNT_KEY = getTodayKey('randomReminderCount');
-
-  // Request permission on first load
-  document.addEventListener("DOMContentLoaded", () => {
-    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission();
-    }
-  });
-
-  // Show notification with click-to-stop
-  function showNotification(message) {
-    if (Notification.permission !== 'granted') return;
-
-    const notification = new Notification("📚 Study Reminder", {
-      body: message + " Click to stop reminders for today.",
-      icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
-      badge: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png"
-    });
-
-    notification.onclick = () => {
-      localStorage.setItem(STOP_KEY, true);
-      notification.close();
-    };
-  }
-
-  // Check fixed scheduled reminders every minute
-  function checkFixedReminders() {
-    const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-
-    if (localStorage.getItem(STOP_KEY)) return;
-
-    if (
-      reminderHours.includes(hour) &&
-      (minute === reminderMinute || (hour === 17 && minute === 50))
-    ) {
-      showNotification("Get ready to study!");
-    }
-  }
-
-  // Schedule random reminders up to max times per day
-  function scheduleRandomReminder() {
-    if (localStorage.getItem(STOP_KEY)) return;
-
-    let count = parseInt(localStorage.getItem(RANDOM_COUNT_KEY)) || 0;
-    if (count >= MAX_RANDOM_REMINDERS) return;
-
-    // Random delay between 5 min (300000 ms) and 3 hours (10800000 ms)
-    const randomDelay = Math.floor(Math.random() * (3 * 60 - 5) + 5) * 60000;
-
-    setTimeout(() => {
-      if (localStorage.getItem(STOP_KEY)) return;
-
-      showNotification("Hey! Time to get ready and study.");
-
-      count++;
-      localStorage.setItem(RANDOM_COUNT_KEY, count);
-
-      if (count < MAX_RANDOM_REMINDERS) {
-        scheduleRandomReminder();
-      }
-    }, randomDelay);
-  }
-
-  // Initialize random reminders and reset daily counts at midnight
-  function initRandomReminders() {
-    const lastDate = localStorage.getItem('randomReminderDate');
-    const today = new Date().toISOString().split('T')[0];
-    if (lastDate !== today) {
-      localStorage.setItem(RANDOM_COUNT_KEY, 0);
-      localStorage.setItem(STOP_KEY, false);
-      localStorage.setItem('randomReminderDate', today);
-    }
-    scheduleRandomReminder();
-  }
-
-  // Run fixed reminders check every minute
-  setInterval(() => {
-    checkFixedReminders();
-  }, 60000);
-
-  // Start random reminders logic on page load
-  initRandomReminders();
 
 </script>
 
