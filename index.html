@@ -190,7 +190,7 @@
 <footer>&copy; 2025 Study Tracker</footer>
 
 <script>
-  // === STUDY ROUTINE CODE ONLY ===
+  // Subject full names and CSS class for badge colors
   const subjectDurations = {
     'Nepali + English': { duration: 100, class: 'NepaliEnglish' },
     'English + Nepali': { duration: 100, class: 'EnglishNepali' },
@@ -201,14 +201,17 @@
     Math: { duration: 100, class: 'Math' },
   };
 
+  // Format time as HH:MM AM/PM (12h)
   function formatTime(date) {
-    return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true});
   }
 
+  // Generate schedule starting at 18:00 (6 PM)
   function generateSchedule(startHour, startMinute, subjects) {
     let schedule = [];
     let current = new Date();
     current.setHours(startHour, startMinute, 0, 0);
+
     for (let subj of subjects) {
       let dur = subjectDurations[subj]?.duration || 60;
       let end = new Date(current.getTime() + dur * 60000);
@@ -225,18 +228,22 @@
     return schedule;
   }
 
+  // Routine pattern with Nepali + English first, Math last
   const routinePattern = [
     ['Nepali + English', 'Account', 'Science', 'Math'],
     ['Nepali + English', 'Social', 'Economics', 'Math'],
     ['English + Nepali', 'Account', 'Science', 'Math'],
   ];
 
+  // Build full routines
   const routine18 = Array.from({length: 18}, (_, i) => routinePattern[i % 3]);
   const routine54 = Array.from({length: 54}, (_, i) => routinePattern[i % 3]);
 
+  // Start dates = today
   const start18Date = new Date();
   const start54Date = new Date();
 
+  // Elements
   const dateTodayEl = document.getElementById('dateToday');
   const grid18 = document.getElementById('grid18');
   const grid54 = document.getElementById('grid54');
@@ -246,6 +253,7 @@
   const tableBody18 = document.querySelector('#table18 tbody');
   const tableBody54 = document.querySelector('#table54 tbody');
 
+  // Get current day number relative to start date
   function getCurrentDayNumber(startDate, totalDays) {
     const now = new Date();
     const diff = now - startDate;
@@ -255,6 +263,7 @@
     return daysPassed;
   }
 
+  // Render day boxes grid
   function renderRoutineGrid(container, routine, storageKey, startDate) {
     container.innerHTML = '';
     const totalDays = routine.length;
@@ -285,6 +294,7 @@
           dayBox.classList.add('glowing');
         }
       }
+      // Future days disabled
 
       if (allowClick) {
         dayBox.classList.add('clickable');
@@ -307,6 +317,7 @@
     }
   }
 
+  // Render subject & time tables with colored badges
   function renderRoutineTable(tbody, routine) {
     tbody.innerHTML = '';
     routine.forEach((subjects, idx) => {
@@ -323,6 +334,7 @@
     });
   }
 
+  // Update today's date display
   function updateDate() {
     const now = new Date();
     dateTodayEl.textContent = `Today is: ${now.toLocaleDateString(undefined, {
@@ -333,6 +345,7 @@
     })}`;
   }
 
+  // Tab switch handler
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       tabButtons.forEach(b => b.classList.remove('active'));
@@ -347,6 +360,7 @@
     });
   });
 
+  // Initial render & intervals
   updateDate();
   renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
   renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
@@ -358,7 +372,6 @@
     renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
     renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
   }, 60000);
-
 </script>
 
 </body>
