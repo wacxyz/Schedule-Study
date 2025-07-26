@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Study Routine Tracker with Colored Subjects & Daily Notifications</title>
 <style>
+  /* (Your existing CSS unchanged, omitted here for brevity but please keep it same as above) */
   body {
     background: #f0f4f8;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,141 +13,7 @@
     color: #222;
     min-height: 100vh;
   }
-  h1 {
-    text-align: center;
-    color: #34495e;
-    margin-bottom: 4px;
-  }
-  #dateToday {
-    text-align: center;
-    font-weight: 600;
-    color: #7f8c8d;
-    margin-bottom: 25px;
-  }
-  .tabs {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  .tab-btn {
-    background: #ecf0f1;
-    border: none;
-    padding: 10px 20px;
-    margin: 0 6px;
-    font-weight: 600;
-    color: #34495e;
-    border-radius: 6px 6px 0 0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  .tab-btn.active {
-    background: #2980b9;
-    color: white;
-  }
-  .routine-container {
-    max-width: 900px;
-    margin: 0 auto 40px;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(9, 55px);
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 25px;
-  }
-  .day-box {
-    background: #bdc3c7;
-    border-radius: 8px;
-    cursor: default;
-    user-select: none;
-    font-size: 1.3rem;
-    color: #222;
-    font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 75px;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    text-align: center;
-  }
-  .day-box.completed {
-    background: #27ae60;
-    color: white;
-    box-shadow: 0 3px 8px rgba(39, 174, 96, 0.7);
-  }
-  .day-box.today {
-    border: 3px solid #e67e22;
-  }
-  .day-box.clickable {
-    cursor: pointer;
-  }
-  .day-box.disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-  .day-box.glowing {
-    box-shadow: 0 0 12px 3px #f1c40f;
-    animation: glowPulse 2s infinite alternate;
-  }
-  @keyframes glowPulse {
-    from {
-      box-shadow: 0 0 8px 2px #f1c40f;
-    }
-    to {
-      box-shadow: 0 0 15px 5px #f39c12;
-    }
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  table th, table td {
-    border: 1px solid #bdc3c7;
-    padding: 8px 12px;
-    text-align: center;
-    font-size: 0.9rem;
-    vertical-align: middle;
-  }
-  table th {
-    background-color: #2980b9;
-    color: white;
-    font-weight: 700;
-  }
-  table tr:nth-child(even) {
-    background-color: #f7f9fb;
-  }
-
-  /* Subject badges with distinct colors */
-  .subject-badge {
-    display: inline-block;
-    padding: 3px 9px;
-    margin: 2px 4px 2px 0;
-    border-radius: 12px;
-    color: white;
-    font-weight: 700;
-    font-size: 0.9rem;
-    user-select: none;
-  }
-  .NepaliEnglish { background-color: #2980b9; }
-  .EnglishNepali { background-color: #3498db; }
-  .Account { background-color: #e67e22; }
-  .Science { background-color: #27ae60; }
-  .Economics { background-color: #9b59b6; }
-  .Social { background-color: #16a085; }
-  .Math { background-color: #c0392b; }
-
-  footer {
-    text-align: center;
-    color: #95a5a6;
-    font-size: 0.85rem;
-    margin-top: 30px;
-  }
+  /* rest of your CSS here ... */
 </style>
 </head>
 <body>
@@ -190,7 +57,7 @@
 <footer>&copy; 2025 Study Tracker</footer>
 
 <script>
-  // Subject full names and CSS class for badge colors
+  // Your existing study routine code here (same as before) ...
   const subjectDurations = {
     'Nepali + English': { duration: 100, class: 'NepaliEnglish' },
     'English + Nepali': { duration: 100, class: 'EnglishNepali' },
@@ -201,17 +68,14 @@
     Math: { duration: 100, class: 'Math' },
   };
 
-  // Format time as HH:MM (24h)
   function formatTime(date) {
     return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   }
 
-  // Generate schedule starting at 18:00 (6 PM)
   function generateSchedule(startHour, startMinute, subjects) {
     let schedule = [];
     let current = new Date();
     current.setHours(startHour, startMinute, 0, 0);
-
     for (let subj of subjects) {
       let dur = subjectDurations[subj]?.duration || 60;
       let end = new Date(current.getTime() + dur * 60000);
@@ -228,22 +92,18 @@
     return schedule;
   }
 
-  // Routine pattern with Nepali + English first, Math last
   const routinePattern = [
     ['Nepali + English', 'Account', 'Science', 'Math'],
     ['Nepali + English', 'Social', 'Economics', 'Math'],
     ['English + Nepali', 'Account', 'Science', 'Math'],
   ];
 
-  // Build full routines
   const routine18 = Array.from({length: 18}, (_, i) => routinePattern[i % 3]);
   const routine54 = Array.from({length: 54}, (_, i) => routinePattern[i % 3]);
 
-  // Start dates = today
   const start18Date = new Date();
   const start54Date = new Date();
 
-  // Elements
   const dateTodayEl = document.getElementById('dateToday');
   const grid18 = document.getElementById('grid18');
   const grid54 = document.getElementById('grid54');
@@ -253,7 +113,6 @@
   const tableBody18 = document.querySelector('#table18 tbody');
   const tableBody54 = document.querySelector('#table54 tbody');
 
-  // Get current day number relative to start date
   function getCurrentDayNumber(startDate, totalDays) {
     const now = new Date();
     const diff = now - startDate;
@@ -263,7 +122,6 @@
     return daysPassed;
   }
 
-  // Render day boxes grid
   function renderRoutineGrid(container, routine, storageKey, startDate) {
     container.innerHTML = '';
     const totalDays = routine.length;
@@ -294,7 +152,6 @@
           dayBox.classList.add('glowing');
         }
       }
-      // Future days disabled
 
       if (allowClick) {
         dayBox.classList.add('clickable');
@@ -317,7 +174,6 @@
     }
   }
 
-  // Render subject & time tables with colored badges
   function renderRoutineTable(tbody, routine) {
     tbody.innerHTML = '';
     routine.forEach((subjects, idx) => {
@@ -334,7 +190,6 @@
     });
   }
 
-  // Update today's date display
   function updateDate() {
     const now = new Date();
     dateTodayEl.textContent = `Today is: ${now.toLocaleDateString(undefined, {
@@ -345,7 +200,6 @@
     })}`;
   }
 
-  // Tab switch handler
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       tabButtons.forEach(b => b.classList.remove('active'));
@@ -360,7 +214,6 @@
     });
   });
 
-  // Initial render & intervals
   updateDate();
   renderRoutineGrid(grid18, routine18, 'completed18', start18Date);
   renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
@@ -373,61 +226,98 @@
     renderRoutineGrid(grid54, routine54, 'completed54', start54Date);
   }, 60000);
 
-  // === IMPROVED NOTIFICATION SYSTEM SCRIPT ===
-  // Reminder times (hours in 24h format)
-  const reminderHours = [5, 7, 9, 11, 13, 15, 17]; 
-  // Minute can be 0, but for 5:50 PM add special case
+  // === IMPROVED NOTIFICATION SYSTEM WITH RANDOM & FIXED REMINDERS ===
+
+  const reminderHours = [5, 7, 9, 11, 13, 15, 17];
   const reminderMinute = 0;
 
-  // Unique key to track if reminders stopped today
-  function getTodayStopKey() {
-    return 'stopReminders_' + new Date().toISOString().split('T')[0];
+  const MAX_RANDOM_REMINDERS = 3;
+
+  function getTodayKey(suffix) {
+    return suffix + '_' + new Date().toISOString().split('T')[0];
   }
 
-  // Request notification permission on page load
+  const STOP_KEY = getTodayKey('stopReminders');
+  const RANDOM_COUNT_KEY = getTodayKey('randomReminderCount');
+
   document.addEventListener("DOMContentLoaded", () => {
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       Notification.requestPermission();
     }
   });
 
-  // Show notification reminder
-  function showReminder(stopKey) {
+  function showNotification(message) {
     if (Notification.permission !== 'granted') return;
 
+    const stopKey = STOP_KEY;
+
     const notification = new Notification("📚 Study Reminder", {
-      body: "Get ready to study! Click to stop reminders for today.",
+      body: message + " Click to stop reminders for today.",
       icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
       badge: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png"
     });
 
     notification.onclick = () => {
-      localStorage.setItem(stopKey, true); // Stop reminders for today
+      localStorage.setItem(stopKey, true);
       notification.close();
     };
   }
 
-  // Schedule reminder checks every minute
-  function setupReminderSchedule() {
-    setInterval(() => {
-      const now = new Date();
-      const hour = now.getHours();
-      const minute = now.getMinutes();
-      const stopKey = getTodayStopKey();
+  function checkFixedReminders() {
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
 
-      if (localStorage.getItem(stopKey)) return; // reminders stopped today
+    if (localStorage.getItem(STOP_KEY)) return;
 
-      // Check if current time matches any reminder hour and minute
-      if (
-        reminderHours.includes(hour) && 
-        (minute === reminderMinute || (hour === 17 && minute === 50))
-      ) {
-        showReminder(stopKey);
-      }
-    }, 60000); // every 1 minute
+    if (
+      reminderHours.includes(hour) &&
+      (minute === reminderMinute || (hour === 17 && minute === 50))
+    ) {
+      showNotification("Get ready to study!");
+    }
   }
 
-  setupReminderSchedule();
+  function scheduleRandomReminder() {
+    if (localStorage.getItem(STOP_KEY)) return;
+
+    let count = parseInt(localStorage.getItem(RANDOM_COUNT_KEY)) || 0;
+    if (count >= MAX_RANDOM_REMINDERS) return;
+
+    // Random delay 5 min to 3 hours
+    const randomDelay = Math.floor(Math.random() * (3 * 60 - 5) + 5) * 60000;
+
+    setTimeout(() => {
+      if (localStorage.getItem(STOP_KEY)) return;
+
+      showNotification("Hey! Time to get ready and study.");
+
+      count++;
+      localStorage.setItem(RANDOM_COUNT_KEY, count);
+
+      if (count < MAX_RANDOM_REMINDERS) {
+        scheduleRandomReminder();
+      }
+    }, randomDelay);
+  }
+
+  function initRandomReminders() {
+    const lastDate = localStorage.getItem('randomReminderDate');
+    const today = new Date().toISOString().split('T')[0];
+    if (lastDate !== today) {
+      localStorage.setItem(RANDOM_COUNT_KEY, 0);
+      localStorage.setItem(STOP_KEY, false);
+      localStorage.setItem('randomReminderDate', today);
+    }
+    scheduleRandomReminder();
+  }
+
+  setInterval(() => {
+    checkFixedReminders();
+  }, 60000);
+
+  initRandomReminders();
+
 </script>
 
 </body>
