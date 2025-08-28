@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1mgtoText - Image to Text & Translate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/tesseract.js@v5.0.4/dist/tesseract.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex justify-between items-center p-4">
+      <a href="index.html" class="text-xl font-bold text-blue-600">← Back to Hub</a>
+      <h1 class="text-2xl font-bold">1mgtoText</h1>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 max-w-6xl mx-auto p-6 space-y-12">
+
+    <!-- OCR Section -->
+    <section id="ocr" class="bg-white rounded-2xl shadow-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">📷 Image to Text (OCR)</h2>
+
+      <!-- Upload Area -->
+      <div id="dropZone" 
+           class="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center cursor-pointer bg-gray-50 hover:bg-gray-100">
+        <p class="text-gray-600">Drag & drop images here or click to upload (max 5, each ≤5MB)</p>
+        <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
+      </div>
+      
+      <button id="processBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4">Process OCR</button>
+      
+      <div id="ocrResults" class="grid md:grid-cols-2 gap-6 mt-6"></div>
+    </section>
+
+    <!-- Translation Section -->
+    <section id="translate" class="bg-white rounded-2xl shadow-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">🌐 Text Translation</h2>
+
+      <textarea id="manualInput" class="w-full border p-3 rounded-lg shadow-sm focus:ring focus:ring-blue-300" rows="4" placeholder="Paste or type your text here..."></textarea>
+      
+      <div class="flex flex-wrap gap-4 mt-4 items-end">
+        <div>
+          <label class="block text-sm font-medium">From:</label>
+          <select id="fromLang" class="border p-2 rounded">
+            <option value="auto">Auto Detect</option>
+            <option value="en">English</option>
+            <option value="ne">Nepali</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">To:</label>
+          <select id="toLang" class="border p-2 rounded">
+            <option value="en">English</option>
+            <option value="ne" selected>Nepali</option>
+          </select>
+        </div>
+        <button id="translateBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Translate</button>
+      </div>
+      
+      <div id="manualResult" class="mt-6 hidden">
+        <p class="font-semibold mb-2">✅ Translation Result:</p>
+        <textarea id="translatedText" class="w-full border p-3 rounded-lg shadow-sm" rows="4" readonly></textarea>
+        <button id="copyBtn" class="mt-3 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">Copy</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-200 text-center py-4 mt-10">
+    <p>&copy; 2025 1mgtoText</p>
+  </footer>
+
+
+<script>
+// --- Elements
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const processBtn = document.getElementById('processBtn');
+const ocrResults = document.getElementById('ocrResults');
+
+const manualInput = document.getElementById('manualInput');
+const fromLang = document.getElementById('fromLang');
+const toLang = document.getElementById('toLang');
+const translateBtn = document.getElementById('translateBtn');
+const manualResult = document.getElementById('manualResult');
+const translatedText = document.getElementById('translatedText');
+const copyBtn = document.getElementById('copyBtn');
+
+// --- File Upload with Drag & Drop ---
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add("bg-blue-50", "border-blue-400");
+});
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove("bg-blue-50", "border-blue-400");
+});
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  fileInput.files = e.dataTransfer.files;
+  dropZone.classList.remove("bg-blue-50", "border-blue-400");
+});
+
+// --- Translation API ---
+function translateText(text, from, to) {
+  return fetch('https://libretranslate.com/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: text, source: from, target: to, format: 'text' })
+  })
+  .then(res => res.json())
+  .then(json => json.translatedText);
+}
+
+function createCopyDownloadBtn(text) {
+  const container = document.createElement('div');
+  container.className = "flex gap-2 mt-2";
+
+  const copyBtn = document.createElement('button');
+  copyBtn.innerText = 'Copy';
+  copyBtn.className = 'bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(text);
+    copyBtn.innerText = 'Copied!';
+    setTimeout(()=>copyBtn.innerText='Copy',1200);
+  };
+
+  const downloadBtn = document.createElement('button');
+  downloadBtn.innerText = 'Download';
+  downloadBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded';
+  downloadBtn.onclick = () => {
+    const blob = new Blob([text], {type: "text/plain"});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = "ocr_result.txt";
+    link.click();
+  };
+
+  container.appendChild(copyBtn);
+  container.appendChild(downloadBtn);
+  return container;
+}
+
+// --- OCR Processing ---
+processBtn.addEventListener('click', async () => {
+  ocrResults.innerHTML = '';
+  const files = Array.from(fileInput.files).slice(0,5);
+  if (!files.length) return alert('Select or drop up to 5 images');
+  
+  for (const file of files) {
+    if(file.size > 5*1024*1024) { alert(file.name + ' is too large! Max 5MB'); continue; }
+    
+    const card = document.createElement('div');
+    card.className = 'bg-gray-50 p-4 rounded-xl shadow';
+    card.innerHTML = `
+      <p class="font-semibold">${file.name}</p>
+      <img src="${URL.createObjectURL(file)}" class="max-w-full mt-2 mb-2 rounded" />
+      <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+        <div class="progress-bar bg-blue-600 h-2 rounded-full" style="width:0%"></div>
+      </div>
+      <p class="mt-1 text-sm text-gray-600">Progress: <span class="percent">0%</span></p>
+    `;
+    ocrResults.appendChild(card);
+
+    const progressBar = card.querySelector(".progress-bar");
+    const percentText = card.querySelector(".percent");
+
+    const { data: { text: ocrText } } = await Tesseract.recognize(file, 'eng+nep', {
+      logger: m => {
+        if(m.status === "recognizing text") {
+          const p = Math.round(m.progress*100);
+          progressBar.style.width = p + "%";
+          percentText.innerText = p + "%";
+        }
+      }
+    });
+
+    const cleaned = ocrText.replace(/[^\u0900-\u097F\u0020-\u007E\n]/g,'').trim();
+    card.innerHTML += `<p class="mt-2 font-medium">OCR Text:</p>
+                       <textarea class="w-full border p-2 rounded">${cleaned}</textarea>`;
+    card.appendChild(createCopyDownloadBtn(cleaned));
+  }
+});
+
+// --- Manual Translation ---
+translateBtn.addEventListener('click', async () => {
+  const text = manualInput.value.trim();
+  if (!text) return alert('Enter some text to translate');
+  
+  let from = fromLang.value;
+  const to = toLang.value;
+  
+  if (from === 'auto') {
+    from = /[\u0900-\u097F]/.test(text) ? 'ne' : 'en';
+  }
+  
+  const translated = await translateText(text, from, to);
+  translatedText.value = translated;
+  manualResult.classList.remove('hidden');
+});
+
+// --- Copy translation ---
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(translatedText.value);
+  copyBtn.innerText = 'Copied!';
+  setTimeout(() => copyBtn.innerText = 'Copy', 1200);
+});
+</script>
+</body>
+</html>
